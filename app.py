@@ -53,5 +53,32 @@ zins_jahr = darlehen * zinssatz
 afa_jahr = (kaufpreis * gebaeudeanteil) * afa_pzt
 hausgeld_jahr = hausgeld_nicht_umlagbar * 12
 
+# HIER WAR DER FEHLER: Zeile war abgeschnitten. Jetzt wieder komplett!
 zu_versteuerndes_einkommen = miete_jahr - zins_jahr - afa_jahr - hausgeld_jahr
-steuerlast_jahr = zu
+steuerlast_jahr = zu_versteuerndes_einkommen * steuersatz
+steuer_monat = steuerlast_jahr / 12
+
+# Cashflow NACH Steuern
+cashflow_nach_steuer = cashflow_vor_steuer - steuer_monat
+
+# Wirtschaftlicher Gesamtgewinn (Cashflow + Tilgung)
+wirtschaftlicher_gewinn_monat = cashflow_nach_steuer + tilgung_monat
+
+# --- AUSGABE / DASHBOARD ---
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("📊 Gesamtinvestition")
+    st.write(f"**Kaufpreis:** {kaufpreis:,.2f} €")
+    st.write(f"**Kaufnebenkosten ({nebenkosten_pzt}%):** {kaufnebenkosten:,.2f} €")
+    st.write(f"**Gesamtkosten:** {gesamtkosten:,.2f} €")
+    st.write(f"**Benötigtes Darlehen:** {darlehen:,.2f} €")
+
+with col2:
+    st.subheader("📈 Steuerliche Abschreibung (AfA)")
+    st.write(f"**Gebäudewert ({int(gebaeudeanteil*100)}%):** {(kaufpreis * gebaeudeanteil):,.2f} €")
+    st.write(f"**Jährliche AfA ({afa_pzt*100}%):** {afa_jahr:,.2f} €")
+    if zu_versteuerndes_einkommen < 0:
+        st.success(f"📉 Steuerlicher Verlust: {zu_versteuerndes_einkommen:,.2f} € (Erzeugt Steuerersparnis!)")
+    else:
+        st.warning(f"📈 Steuerlicher Gewinn: {zu_versteuerndes_e
