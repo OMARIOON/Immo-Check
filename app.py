@@ -17,8 +17,9 @@ if immoscout_link:
     st.sidebar.caption("🔗 [Link im neuen Tab öffnen](%s)" % immoscout_link)
 
 st.sidebar.header("💰 2. Finanzielle Rahmendaten")
-kaufpreis = st.sidebar.number_input("Kaufpreis (€)", min_value=0.0, value=250000.0, step=5000.0)
-nebenkosten_pzt = st.sidebar.slider("Kaufnebenkosten (Grunderwerbsteuer, Notar, Makler in %)", 0.0, 15.0, 10.0, step=0.5)
+kaufpreis = st.sidebar.number_input("Kaufpreis (€)", min_value=0.0, value=312000.0, step=5000.0)
+# Hier bleibt der Slider bei normalen Prozentwerten (z.B. 5.0)
+nebenkosten_pzt = st.sidebar.slider("Kaufnebenkosten (Grunderwerbsteuer, Notar, Makler in %)", 0.0, 15.0, 5.0, step=0.5)
 eigenkapital = st.sidebar.number_input("Eingesetztes Eigenkapital (€)", min_value=0.0, value=40000.0, step=2000.0)
 
 st.sidebar.header("📉 3. Finanzierung & Steuer")
@@ -32,8 +33,9 @@ afa_pzt = st.sidebar.slider("AfA-Satz (Abschreibung in %)", 0.0, 5.0, 2.0, step=
 gebaeudeanteil = st.sidebar.slider("Gebäudewert-Anteil für AfA (%)", 0, 100, 80) / 100
 hausgeld_nicht_umlagbar = st.sidebar.number_input("Nicht umlagefähiges Hausgeld + Rücklage (monatlich in €)", min_value=0.0, value=50.0, step=5.0)
 
-# --- BERECHNUNGSLOGIK ---
-kaufnebenkosten = kaufpreis * nebenkosten_pzt
+# --- BERECHNUNGSLOGIK (KORRIGIERT) ---
+# HIER IST DIE KORREKTUR: Teilen durch 100, damit aus 5% -> 0.05 wird
+kaufnebenkosten = kaufpreis * (nebenkosten_pzt / 100) 
 gesamtkosten = kaufpreis + kaufnebenkosten
 darlehen = max(0.0, gesamtkosten - eigenkapital)
 
