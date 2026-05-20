@@ -81,4 +81,89 @@ with col2:
     if zu_versteuerndes_einkommen < 0:
         st.success(f"📉 Steuerlicher Verlust: {zu_versteuerndes_einkommen:,.2f} € (Erzeugt Steuerersparnis!)")
     else:
-        st.warning(f"📈 Steuerlicher Gewinn: {zu_versteuerndes_e
+        st.warning(f"📈 Steuerlicher Gewinn: {zu_versteuerndes_einkommen:,.2f} € (Erzeugt Steuerlast)")
+
+st.divider()
+
+# Cashflow KPIs
+st.subheader("💰 Cashflow Analyse (Monatlich)")
+kpi1, kpi2 = st.columns(2)
+
+with kpi1:
+    if cashflow_vor_steuer >= 0:
+        st.metric(label="Cashflow VOR Steuern", value=f"{cashflow_vor_steuer:.2f} €", delta="Positiv")
+    else:
+        st.metric(label="Cashflow VOR Steuern", value=f"{cashflow_vor_steuer:.2f} €", delta="Negativ", delta_color="inverse")
+
+with kpi2:
+    if cashflow_nach_steuer >= 0:
+        st.metric(label="Cashflow NACH Steuern", value=f"{cashflow_nach_steuer:.2f} €", delta="Investition trägt sich")
+    else:
+        st.metric(label="Cashflow NACH Steuern", value=f"{cashflow_nach_steuer:.2f} €", delta="Zuschussgeschäft", delta_color="inverse")
+
+# Detaillierte Tabelle
+st.subheader("📋 Einzelposten-Aufschlüsselung (Monatlich)")
+
+daten_tabelle = {
+    "Posten": [
+        "Mieteinnahmen (Kaltmiete)", 
+        "🪓 Davon Zinszahlung (Bank)", 
+        "🪓 Davon Tilgung (Vermögensaufbau)", 
+        "🪓 Davon Hausgeld (nicht umlagefähig)",
+        "= Cashflow VOR Steuern",
+        "⚖️ Steuereffekt (Minus = Last / Plus = Ersparnis)",
+        "🚀 FINALES ERGEBNIS: Cashflow NACH Steuern"
+    ],
+    "Betrag": [
+        f"+ {einnahmen_monat:.2f} €",
+        f"- {zins_monat:.2f} €",
+        f"- {tilgung_monat:.2f} €",
+        f"- {hausgeld_nicht_umlagbar:.2f} €",
+        f"{cashflow_vor_steuer:.2f} €",
+        f"{-steuer_monat:.2f} €",
+        f"{cashflow_nach_steuer:.2f} €"
+    ]
+}
+
+df = pd.DataFrame(daten_tabelle)
+st.table(df)
+
+# Fazit-Box
+st.subheader("💡 Fazit")
+if cashflow_nach_steuer > 0:
+    st.success(f"**Hervorragend!** Diese Immobilie wirft nach Steuern jeden Monat **{cashflow_nach_steuer:.2f} €** ab. Sie ist ein echter Selbstläufer.")
+elif cashflow_nach_steuer == 0:
+    st.info("**Punktlandung!** Die Immobilie trägt sich nach Steuern exakt von selbst. Du baust Vermögen auf, ohne monatlich draufzuzahlen.")
+else:
+    st.error(f"**Achtung Zuschussgeschäft!** Du musst monatlich **{abs(cashflow_nach_steuer):.2f} €** aus eigener Tasche dazuzahlen, um die Immobilie zu halten.")
+
+st.divider()
+
+# --- SEKTION VERMÖGENSAUFBAU ---
+st.subheader("🧱 🛠️ Visualisierung des Vermögensaufbaus")
+st.write("Auch wenn der Cashflow oben vielleicht knapp kalkuliert ist: **Der Mieter zahlt deinen Kredit ab!** Das ist dein tatsächlicher Vermögenszuwachs.")
+
+col_v1, col_v2 = st.columns(2)
+
+with col_v1:
+    st.info(f"**Monatliche Tilgung (Kreditabbau):** {tilgung_monat:,.2f} €\n\n"
+            f"**Wirtschaftlicher Gesamtgewinn p.m.:** {wirtschaftlicher_gewinn_monat:,.2f} €\n"
+            f"*(Cashflow nach Steuern + Tilgung)*")
+
+with col_v2:
+    vermoegen_1_jahr = tilgung_monat * 12
+    vermoegen_5_jahre = tilgung_monat * 12 * 5
+    vermoegen_10_jahre = tilgung_monat * 12 * 10
+    
+    daten_vermoegen = {
+        "Zeitraum": ["Nach 1 Jahr", "Nach 5 Jahren", "Nach 10 Jahren"],
+        "Abbezahlter Kredit (= Dein Vermögen)": [
+            f"{vermoegen_1_jahr:,.2f} €",
+            f"{vermoegen_5_jahre:,.2f} €",
+            f"{vermoegen_10_jahre:,.2f} €"
+        ]
+    }
+    df_vermoegen = pd.DataFrame(daten_vermoegen)
+    st.table(df_vermoegen)
+    
+st.caption("Hinweis: Bei Annuitätendarlehen steigt der Tilgungsanteil über die Jahre sogar leicht an, da die Zinslast sinkt. Der reale Vermögensaufbau wird also noch etwas höher sein!")
