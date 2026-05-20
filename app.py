@@ -55,7 +55,7 @@ zins_jahr = darlehen * zinssatz
 afa_jahr = (kaufpreis * gebaeudeanteil) * afa_pzt
 hausgeld_jahr = hausgeld_nicht_umlagbar * 12
 
-# KORREKTUR HIER: hausgeld_jahr exakt eingetragen
+# Zu versteuerndes Einkommen berechnen
 zu_versteuerndes_einkommen = miete_jahr - zins_jahr - afa_jahr - hausgeld_jahr
 steuerlast_jahr = zu_versteuerndes_einkommen * steuersatz
 steuer_monat = steuerlast_jahr / 12
@@ -136,4 +136,37 @@ st.subheader("💡 Fazit")
 if cashflow_nach_steuer > 0:
     st.success(f"**Hervorragend!** Diese Immobilie wirft nach Steuern jeden Monat **{cashflow_nach_steuer:.2f} €** ab. Sie ist ein echter Selbstläufer.")
 elif cashflow_nach_steuer == 0:
-    st.info("**Punktlandung!** Die Immobilie
+    st.info("**Punktlandung!** Die Immobilie trägt sich nach Steuern exakt von selbst. Du baust Vermögen auf, ohne monatlich draufzuzahlen.")
+else:
+    st.error(f"**Achtung Zuschussgeschäft!** Du musst monatlich **{abs(cashflow_nach_steuer):.2f} €** aus eigener Tasche dazuzahlen, um die Immobilie zu halten.")
+
+st.divider()
+
+# --- SEKTION VERMÖGENSAUFBAU ---
+st.subheader("🧱 🛠️ Visualisierung des Vermögensaufbaus")
+st.write("Auch wenn der Cashflow oben vielleicht knapp kalkuliert ist: **Der Mieter zahlt deinen Kredit ab!** Das ist dein tatsächlicher Vermögenszuwachs.")
+
+col_v1, col_v2 = st.columns(2)
+
+with col_v1:
+    st.info(f"**Monatliche Tilgung (Kreditabbau):** {tilgung_monat:,.2f} €\n\n"
+            f"**Wirtschaftlicher Gesamtgewinn p.m.:** {wirtschaftlicher_gewinn_monat:,.2f} €\n"
+            f"*(Cashflow nach Steuern + Tilgung)*")
+
+with col_v2:
+    vermoegen_1_jahr = tilgung_monat * 12
+    vermoegen_5_jahre = tilgung_monat * 12 * 5
+    vermoegen_10_jahre = tilgung_monat * 12 * 10
+    
+    daten_vermoegen = {
+        "Zeitraum": ["Nach 1 Jahr", "Nach 5 Jahren", "Nach 10 Jahren"],
+        "Abbezahlter Kredit (= Dein Vermögen)": [
+            f"{vermoegen_1_jahr:,.2f} €",
+            f"{vermoegen_5_jahre:,.2f} €",
+            f"{vermoegen_10_jahre:,.2f} €"
+        ]
+    }
+    df_vermoegen = pd.DataFrame(daten_vermoegen)
+    st.table(df_vermoegen)
+    
+st.caption("Hinweis: Bei Annuitätendarlehen steigt der Tilgungsanteil über die Jahre sogar leicht an, da die Zinslast sinkt. Der reale Vermögensaufbau wird also noch etwas höher sein!")
