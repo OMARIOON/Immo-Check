@@ -31,7 +31,7 @@ kaltmiete_monat = st.sidebar.number_input("Erwartete Kaltmiete (monatlich in €
 
 st.sidebar.header("🏠 5. Laufende Kosten & Abschreibung")
 hausgeld_nicht_umlagbar = st.sidebar.number_input("Nicht umlagefähiges Hausgeld + Rücklage (monatlich in €)", min_value=0.0, value=50.0, step=5.0)
-afa_pzt = st.sidebar.slider("AfA-Satz (Abschreibung in %)", 0.0, 5.0, 2.0, step=0.5) / 100
+afa_pzt = st.sidebar.slider("AfA-Satz (Abschreibung in %)", 0.0, 10.0, 2.0, step=0.5) / 100
 gebaeudeanteil = st.sidebar.slider("Gebäudewert-Anteil für AfA (%)", 0, 100, 80) / 100
 
 # --- BERECHNUNGSLOGIK ---
