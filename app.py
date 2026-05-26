@@ -31,17 +31,18 @@ kaltmiete_monat = st.sidebar.number_input("Erwartete Brutto-Miete / Pauschalmiet
 
 st.sidebar.header("🏠 5. Laufende Kosten & Gebäude-Abschreibung")
 hausgeld_nicht_umlagbar = st.sidebar.number_input("Nicht umlagefähiges Hausgeld + Rücklage (monatlich in €)", min_value=0.0, value=100.0, step=5.0)
-afa_pzt = st.sidebar.slider("Gebäude-AfA-Satz (Abschreibung in %)", 0.0, 5.0, 5.0, step=0.5) / 100
+# HIER WURDE DER MAXIMALWERT AUF 10.0 ERHÖHT:
+afa_pzt = st.sidebar.slider("Gebäude-AfA-Satz (Abschreibung in %)", 0.0, 10.0, 5.0, step=0.5) / 100
 gebaeudeanteil = st.sidebar.slider("Gebäudewert-Anteil für AfA (%)", 0, 100, 80) / 100
 
-# NEU: Sektion für Möblierung
+# Sektion für Möblierung
 st.sidebar.header("🛋️ 6. Möblierung & Einrichtung")
 st.sidebar.caption("Kosten für die Erstausstattung der 1-Zimmerwohnung. Wird steuerlich über 5 Jahre abgeschrieben.")
 wert_kueche = st.sidebar.number_input("Einbauküche (€)", min_value=0.0, value=4500.0, step=500.0)
 wert_moebel = st.sidebar.number_input("Möbel (Bett, Schrank, Sofa, Esstisch etc. in €)", min_value=0.0, value=3500.0, step=500.0)
 wert_geraete = st.sidebar.number_input("Geräte & Deko (TV, Lampen, Geschirr etc. in €)", min_value=0.0, value=1000.0, step=100.0)
 
-# NEU: Sektion für laufende Inklusiv-Kosten
+# Sektion für laufende Inklusiv-Kosten
 st.sidebar.header("🔌 7. Laufende Inklusiv-Kosten")
 st.sidebar.caption("Kosten, die du bei einer Pauschalmiete selbst für den Mieter bezahlst.")
 kosten_strom_internet = st.sidebar.number_input("Strom & Internet/WLAN (monatlich in €)", min_value=0.0, value=70.0, step=5.0)
