@@ -4,8 +4,8 @@ import pandas as pd
 # App-Konfiguration
 st.set_page_config(page_title="Immobilien-Rendite-Prüfer", page_icon="🏢", layout="wide")
 
-st.title("🏢 Immobilien-Rendite-Prüfer (Vor & Nach Steuern)")
-st.write("Berechne schnell und unkompliziert den tatsächlichen Cashflow deiner potenziellen Kapitalanlage.")
+st.title("🏢 Immobilien-Rendite-Prüfer (Inkl. Möblierung & Steuern)")
+st.write("Berechne den exakten Cashflow deiner Kapitalanlage – jetzt auch für möblierte All-Inclusive-Vermietung.")
 
 st.divider()
 
@@ -17,22 +17,36 @@ if immoscout_link:
     st.sidebar.caption("🔗 [Link im neuen Tab öffnen](%s)" % immoscout_link)
 
 st.sidebar.header("💰 2. Finanzielle Rahmendaten")
-kaufpreis = st.sidebar.number_input("Kaufpreis (€)", min_value=0.0, value=312000.0, step=5000.0)
-nebenkosten_pzt = st.sidebar.slider("Kaufnebenkosten (Grunderwerbsteuer, Notar, Makler in %)", 0.0, 15.0, 5.0, step=0.5)
-eigenkapital = st.sidebar.number_input("Eingesetztes Eigenkapital (€)", min_value=0.0, value=40000.0, step=2000.0)
+kaufpreis = st.sidebar.number_input("Kaufpreis (€)", min_value=0.0, value=344900.0, step=5000.0)
+nebenkosten_pzt = st.sidebar.slider("Kaufnebenkosten (Grunderwerbsteuer, Notar, Makler in %)", 0.0, 15.0, 5.5, step=0.1)
+eigenkapital = st.sidebar.number_input("Eingesetztes Eigenkapital (€)", min_value=0.0, value=0.0, step=2000.0)
 
 st.sidebar.header("📉 3. Finanzierung & Steuer")
-zinssatz = st.sidebar.number_input("Zinssatz p.a. (%)", min_value=0.0, value=3.8, step=0.1) / 100
-tilgung = st.sidebar.number_input("Tilgung p.a. (%)", min_value=0.0, value=1.5, step=0.1) / 100
+zinssatz = st.sidebar.number_input("Zinssatz p.a. (%)", min_value=0.0, value=4.7, step=0.1) / 100
+tilgung = st.sidebar.number_input("Tilgung p.a. (%)", min_value=0.0, value=1.1, step=0.1) / 100
 steuersatz = st.sidebar.slider("Dein persönlicher Steuersatz (%)", 0, 45, 42) / 100
 
 st.sidebar.header("🏢 4. Mieteinnahmen")
-kaltmiete_monat = st.sidebar.number_input("Erwartete Kaltmiete (monatlich in €)", min_value=0.0, value=900.0, step=50.0)
+kaltmiete_monat = st.sidebar.number_input("Erwartete Brutto-Miete / Pauschalmiete (monatlich in €)", min_value=0.0, value=1650.0, step=50.0)
 
-st.sidebar.header("🏠 5. Laufende Kosten & Abschreibung")
-hausgeld_nicht_umlagbar = st.sidebar.number_input("Nicht umlagefähiges Hausgeld + Rücklage (monatlich in €)", min_value=0.0, value=50.0, step=5.0)
-afa_pzt = st.sidebar.slider("AfA-Satz (Abschreibung in %)", 0.0, 5.0, 2.0, step=0.5) / 100
+st.sidebar.header("🏠 5. Laufende Kosten & Gebäude-Abschreibung")
+hausgeld_nicht_umlagbar = st.sidebar.number_input("Nicht umlagefähiges Hausgeld + Rücklage (monatlich in €)", min_value=0.0, value=100.0, step=5.0)
+afa_pzt = st.sidebar.slider("Gebäude-AfA-Satz (Abschreibung in %)", 0.0, 5.0, 5.0, step=0.5) / 100
 gebaeudeanteil = st.sidebar.slider("Gebäudewert-Anteil für AfA (%)", 0, 100, 80) / 100
+
+# NEU: Sektion für Möblierung
+st.sidebar.header("🛋️ 6. Möblierung & Einrichtung")
+st.sidebar.caption("Kosten für die Erstausstattung der 1-Zimmerwohnung. Wird steuerlich über 5 Jahre abgeschrieben.")
+wert_kueche = st.sidebar.number_input("Einbauküche (€)", min_value=0.0, value=4500.0, step=500.0)
+wert_moebel = st.sidebar.number_input("Möbel (Bett, Schrank, Sofa, Esstisch etc. in €)", min_value=0.0, value=3500.0, step=500.0)
+wert_geraete = st.sidebar.number_input("Geräte & Deko (TV, Lampen, Geschirr etc. in €)", min_value=0.0, value=1000.0, step=100.0)
+
+# NEU: Sektion für laufende Inklusiv-Kosten
+st.sidebar.header("🔌 7. Laufende Inklusiv-Kosten")
+st.sidebar.caption("Kosten, die du bei einer Pauschalmiete selbst für den Mieter bezahlst.")
+kosten_strom_internet = st.sidebar.number_input("Strom & Internet/WLAN (monatlich in €)", min_value=0.0, value=70.0, step=5.0)
+kosten_waerme_wasser = st.sidebar.number_input("Umlagefähige Nebenkosten (Heizung, Wasser etc. monatlich in €)", min_value=0.0, value=90.0, step=5.0)
+
 
 # --- BERECHNUNGSLOGIK ---
 kaufnebenkosten = kaufpreis * (nebenkosten_pzt / 100) 
@@ -44,19 +58,25 @@ zins_monat = (darlehen * zinssatz) / 12
 tilgung_monat = (darlehen * tilgung) / 12
 rate_monat = zins_monat + tilgung_monat
 
-# Cashflow VOR Steuern
-einnahmen_monat = kaltmiete_monat
-ausgaben_monat = rate_monat + hausgeld_nicht_umlagbar
-cashflow_vor_steuer = einnahmen_monat - ausgaben_monat
+# Berechnung Möbel-Abschreibung (AfA über 5 Jahre = 20% pro Jahr)
+gesamt_moebel_wert = wert_kueche + wert_moebel + wert_geraete
+moebel_afa_jahr = gesamt_moebel_wert * 0.20
+moebel_afa_monat = moebel_afa_jahr / 12
+
+# Laufende Gesamtkosten (Hausgeld + Strom + Heizung)
+laufende_kosten_gesamt_monat = hausgeld_nicht_umlagbar + kosten_strom_internet + kosten_waerme_wasser
+
+# Cashflow VOR Steuern (Einnahme minus Bankrate minus alle realen Kosten vom Konto)
+cashflow_vor_steuer = kaltmiete_monat - rate_monat - laufende_kosten_gesamt_monat
 
 # Steuerliche Betrachtung (Jahr)
 miete_jahr = kaltmiete_monat * 12
 zins_jahr = darlehen * zinssatz
-afa_jahr = (kaufpreis * gebaeudeanteil) * afa_pzt
-hausgeld_jahr = hausgeld_nicht_umlagbar * 12
+gebaeude_afa_jahr = (kaufpreis * gebaeudeanteil) * afa_pzt
+laufende_kosten_jahr = laufende_kosten_gesamt_monat * 12
 
-# Zu versteuerndes Einkommen berechnen
-zu_versteuerndes_einkommen = miete_jahr - zins_jahr - afa_jahr - hausgeld_jahr
+# Zu versteuerndes Einkommen unter Berücksichtigung der neuen Möbel-AfA und Inklusivkosten
+zu_versteuerndes_einkommen = miete_jahr - zins_jahr - gebaeude_afa_jahr - laufende_kosten_jahr - moebel_afa_jahr
 steuerlast_jahr = zu_versteuerndes_einkommen * steuersatz
 steuer_monat = steuerlast_jahr / 12
 
@@ -66,21 +86,24 @@ cashflow_nach_steuer = cashflow_vor_steuer - steuer_monat
 # Wirtschaftlicher Gesamtgewinn (Cashflow + Tilgung)
 wirtschaftlicher_gewinn_monat = cashflow_nach_steuer + tilgung_monat
 
+
 # --- AUSGABE / DASHBOARD ---
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("📊 Gesamtinvestition")
-    st.write(f"**Kaufpreis:** {kaufpreis:,.2f} €")
+    st.write(f"**Immobilien-Kaufpreis:** {kaufpreis:,.2f} €")
     st.write(f"**Kaufnebenkosten ({nebenkosten_pzt}%):** {kaufnebenkosten:,.2f} €")
-    st.write(f"**Gesamtkosten:** {gesamtkosten:,.2f} €")
+    st.write(f"**Gesamtkosten Investition:** {gesamtkosten:,.2f} €")
     st.write(f"**Benötigtes Darlehen:** {darlehen:,.2f} €")
+    st.write(f"**Zusätzliche Möblierungskosten (Bar/Eigenkapital):** {gesamt_moebel_wert:,.2f} €")
 
 with col2:
-    st.subheader("📈 Steuerliche Betrachtung (Jahr)")
-    st.write(f"**Gebäudewert ({int(gebaeudeanteil*100)}%):** {(kaufpreis * gebaeudeanteil):,.2f} €")
-    st.write(f"**Jährliche AfA ({afa_pzt*100}%):** {afa_jahr:,.2f} €")
-    st.write(f"**Absetzbares Hausgeld p.a.:** {hausgeld_jahr:,.2f} €")
+    st.subheader("📈 Steuerliche Abschreibungen (Jahr)")
+    st.write(f"**Gebäudewert-Basis ({int(gebaeudeanteil*100)}%):** {(kaufpreis * gebaeudeanteil):,.2f} €")
+    st.write(f"**Jährliche Gebäude-AfA ({afa_pzt*100}%):** {gebaeude_afa_jahr:,.2f} €")
+    st.write(f"**Jährliche Möbel-AfA (20% p.a.):** {moebel_afa_jahr:,.2f} €")
+    
     if zu_versteuerndes_einkommen < 0:
         st.success(f"📉 Steuerlicher Verlust: {zu_versteuerndes_einkommen:,.2f} € (Erzeugt Steuerersparnis!)")
     else:
@@ -109,19 +132,23 @@ st.subheader("📋 Einzelposten-Aufschlüsselung (Monatlich)")
 
 daten_tabelle = {
     "Posten": [
-        "Mieteinnahmen (Kaltmiete)", 
+        "Mieteinnahmen (Brutto/Pauschalmiete)", 
         "🪓 Davon Zinszahlung (Bank)", 
         "🪓 Davon Tilgung (Vermögensaufbau)", 
         "🪓 Davon Hausgeld (nicht umlagefähig)",
+        "🪓 Davon Strom & Internet (Inklusivleistung)",
+        "🪓 Davon Heizung & Wasser (Inklusivleistung)",
         "= Cashflow VOR Steuern",
         "⚖️ Steuereffekt (Minus = Last / Plus = Ersparnis)",
         "🚀 FINALES ERGEBNIS: Cashflow NACH Steuern"
     ],
     "Betrag": [
-        f"+ {einnahmen_monat:.2f} €",
+        f"+ {kaltmiete_monat:.2f} €",
         f"- {zins_monat:.2f} €",
         f"- {tilgung_monat:.2f} €",
         f"- {hausgeld_nicht_umlagbar:.2f} €",
+        f"- {kosten_strom_internet:.2f} €",
+        f"- {kosten_waerme_wasser:.2f} €",
         f"{cashflow_vor_steuer:.2f} €",
         f"{-steuer_monat:.2f} €",
         f"{cashflow_nach_steuer:.2f} €"
@@ -144,7 +171,7 @@ st.divider()
 
 # --- SEKTION VERMÖGENSAUFBAU ---
 st.subheader("🧱 🛠️ Visualisierung des Vermögensaufbaus")
-st.write("Auch wenn der Cashflow oben vielleicht knapp kalkuliert ist: **Der Mieter zahlt deinen Kredit ab!** Das ist dein tatsächlicher Vermögenszuwachs.")
+st.write("Der Mieter zahlt deinen Kredit ab, während das Finanzamt dir unterjährig hilft:")
 
 col_v1, col_v2 = st.columns(2)
 
@@ -168,5 +195,3 @@ with col_v2:
     }
     df_vermoegen = pd.DataFrame(daten_vermoegen)
     st.table(df_vermoegen)
-    
-st.caption("Hinweis: Bei Annuitätendarlehen steigt der Tilgungsanteil über die Jahre sogar leicht an, da die Zinslast sinkt. Der reale Vermögensaufbau wird also noch etwas höher sein!")
